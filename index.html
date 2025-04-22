@@ -153,7 +153,7 @@
         const explain = document.getElementById("explainMore");
         explain.style.display = "block";
         explain.textContent =
-          "We compare how hot and humid it feels inside versus outside using the heat index. If it feels much better outside, we suggest opening the windows. If they’re close, we say it won’t matter much.";
+          "We use the heat index, which combines temperature and relative humidity to estimate how hot it feels. It’s calculated using the Rothfusz regression formula used by the National Weather Service. We add +2°F to outdoor values during daytime to simulate sunlight discomfort. If the indoor and outdoor values differ by more than ±2°F, we recommend a clear choice. Otherwise, it’s a draw.";
       });
     });
   </script>
