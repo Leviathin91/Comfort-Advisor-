@@ -24,11 +24,7 @@
 <body>
   <h1>Window Wise</h1>
   <form id="comfortForm">
-    <label>
-      Use my location?
-      <input type="checkbox" id="useLocation" />
-    </label>
-    <label>
+        <label>
       Zip Code:
       <input type="text" id="zipCode" maxlength="5" required />
       <button type="button" id="lookupZip">Fetch Weather</button>
@@ -113,21 +109,20 @@
       return "This might be the best time of day for fresh air.";
     }
 
-    document.getElementById("useLocation").addEventListener("change", async function () {
+    // removed location block
       if (!this.checked) return;
-      navigator.geolocation.getCurrentPosition(async (pos) => {
+      //
         const weather = await fetchWeather(`${pos.coords.latitude},${pos.coords.longitude}`);
           if (weather) {
             document.getElementById("outdoorTemp").value = Math.round(weather.temp_f);
             document.getElementById("outdoorHumidity").value = Math.round(weather.humidity);
           }
         }
-      });
-    });
+      // end
 
-    document.getElementById("lookupZip").addEventListener("click", async () => {
+    document.getElementById("lookupZip").addEventListener("click", async function () {
       const zip = document.getElementById("zipCode").value;
-      if (zip.length === 5) {
+      if (isValidZip(zip)) {
         const weather = await fetchWeather(zip);
         if (weather) {
           document.getElementById("outdoorTemp").value = Math.round(weather.temp_f);
