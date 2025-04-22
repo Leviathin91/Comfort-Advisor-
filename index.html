@@ -62,11 +62,11 @@
   <div id="comfortScores"></div>
   <div id="result"></div>
   <div id="explanation"></div>
-  <div id="tipPoint"></div>
+  <button id="showExplain" type="button">Wanna know more?</button><div id="explainMore" style="display:none; font-size: 0.95rem; margin-top: 0.75rem; color: #444;"></div>
   <div id="smartTip"></div>
 
   <script>
-    const weatherKey = "3a06f791e55849f48f8192701252204";
+    const weatherKey = "demo"; // Replace with your real API key
 
     async function fetchWeather(zip) {
       try {
@@ -79,13 +79,7 @@
       }
     }
 
-    async function getZipFromCoords(lat, lon) {
-      const res = await fetch(`https://api.weatherapi.com/v1/search.json?key=${weatherKey}&q=${lat},${lon}`);
-      const data = await res.json();
-      return data[0]?.zip;
-    }
-
-    function heatIndex(T, RH) {
+        function heatIndex(T, RH) {
       const c1 = -42.379, c2 = 2.04901523, c3 = 10.14333127, c4 = -0.22475541,
             c5 = -0.00683783, c6 = -0.05481717, c7 = 0.00122874,
             c8 = 0.00085282, c9 = -0.00000199;
@@ -122,10 +116,7 @@
     document.getElementById("useLocation").addEventListener("change", async function () {
       if (!this.checked) return;
       navigator.geolocation.getCurrentPosition(async (pos) => {
-        const zip = await getZipFromCoords(pos.coords.latitude, pos.coords.longitude);
-        if (zip) {
-          document.getElementById("zipCode").value = zip;
-          const weather = await fetchWeather(zip);
+        const weather = await fetchWeather(`${pos.coords.latitude},${pos.coords.longitude}`);
           if (weather) {
             document.getElementById("outdoorTemp").value = weather.temp_f;
             document.getElementById("outdoorHumidity").value = weather.humidity;
@@ -165,14 +156,19 @@
         `Indoor: ${inScore.emoji} (${inScore.score}/10) — Outdoor: ${outScore.emoji} (${outScore.score}/10)`;
 
       const result = document.getElementById("result");
-      const diff = outHI - inHI;
+      const diff = Math.round((outHI - inHI) * 10) / 10;
       result.textContent = diff < -2 ? "Yes, open the windows—it'll feel better!" :
                             diff > 2 ? "No, keep them closed—outside would be worse." :
                             "Meh, doesn’t matter much. Conditions are similar.";
 
       document.getElementById("explanation").textContent = "Based on heat index and humidity comfort levels.";
-      document.getElementById("tipPoint").textContent = `Opening the windows would feel equal if outside was about ${findTippingPoint(inHI, isDay)}°F at 50% humidity.`;
+      
       document.getElementById("smartTip").textContent = giveSmartTip(outT, isDay);
+      document.getElementById("showExplain").onclick = () => {
+        document.getElementById("explainMore").style.display = "block";
+        document.getElementById("explainMore").textContent = 
+          "We compare how hot and humid it feels inside versus outside using the heat index. If it feels much better outside, we suggest opening the windows. If they’re close, we say it won’t matter much.";
+      };
     });
   </script>
 </body>
