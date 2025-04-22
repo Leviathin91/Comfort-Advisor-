@@ -118,8 +118,8 @@
       navigator.geolocation.getCurrentPosition(async (pos) => {
         const weather = await fetchWeather(`${pos.coords.latitude},${pos.coords.longitude}`);
           if (weather) {
-            document.getElementById("outdoorTemp").value = weather.temp_f;
-            document.getElementById("outdoorHumidity").value = weather.humidity;
+            document.getElementById("outdoorTemp").value = Math.round(weather.temp_f);
+            document.getElementById("outdoorHumidity").value = Math.round(weather.humidity);
           }
         }
       });
@@ -130,8 +130,8 @@
       if (zip.length === 5) {
         const weather = await fetchWeather(zip);
         if (weather) {
-          document.getElementById("outdoorTemp").value = weather.temp_f;
-          document.getElementById("outdoorHumidity").value = weather.humidity;
+          document.getElementById("outdoorTemp").value = Math.round(weather.temp_f);
+          document.getElementById("outdoorHumidity").value = Math.round(weather.humidity);
         }
       } else {
         alert("Please enter a valid 5-digit ZIP code.");
