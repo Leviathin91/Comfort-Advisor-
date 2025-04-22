@@ -18,13 +18,13 @@
     input, select { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
     button { margin-top: 1.5rem; padding: 0.75rem; width: 100%; }
     #result, #comfortScores { margin-top: 2rem; font-size: 1.2rem; font-weight: bold; }
-    #explanation, #tipPoint, #smartTip { margin-top: 0.5rem; font-size: 1rem; color: #555; }
+    #explanation, #smartTip, #explainMore { margin-top: 0.5rem; font-size: 1rem; color: #555; }
   </style>
 </head>
 <body>
   <h1>Window Wise</h1>
   <form id="comfortForm">
-        <label>
+    <label>
       Zip Code:
       <input type="text" id="zipCode" maxlength="5" required />
       <button type="button" id="lookupZip">Fetch Weather</button>
@@ -58,49 +58,46 @@
   <div id="comfortScores"></div>
   <div id="result"></div>
   <div id="explanation"></div>
-  <button id="showExplain" type="button">Wanna know more?</button><div id="explainMore" style="display:none; font-size: 0.95rem; margin-top: 0.75rem; color: #444;"></div>
   <div id="smartTip"></div>
+  <button id="showExplain" type="button">Wanna know more?</button>
+  <div id="explainMore" style="display:none;"></div>
 
   <script>
-    const weatherKey = "demo"; // Replace with your real API key
+    const weatherKey = "3a06f791e55849f48f8192701252204";
+
+    function isValidZip(zip) {
+      return /^\d{5}$/.test(zip);
+    }
 
     async function fetchWeather(zip) {
       try {
         const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=${weatherKey}&q=${zip}`);
         const data = await res.json();
-        return data.current;
+        return {
+          temp_f: Math.round(data.current.temp_f),
+          humidity: Math.round(data.current.humidity)
+        };
       } catch (err) {
         alert("Weather lookup failed.");
         return null;
       }
     }
 
-        function heatIndex(T, RH) {
+    function heatIndex(T, RH) {
       const c1 = -42.379, c2 = 2.04901523, c3 = 10.14333127, c4 = -0.22475541,
-            c5 = -0.00683783, c6 = -0.05481717, c7 = 0.00122874,
-            c8 = 0.00085282, c9 = -0.00000199;
-      const HI = c1 + c2*T + c3*RH + c4*T*RH + c5*T*T + c6*RH*RH +
-                 c7*T*T*RH + c8*T*RH*RH + c9*T*T*RH*RH;
+        c5 = -0.00683783, c6 = -0.05481717, c7 = 0.00122874,
+        c8 = 0.00085282, c9 = -0.00000199;
+      const HI = c1 + c2 * T + c3 * RH + c4 * T * RH + c5 * T * T + c6 * RH * RH +
+        c7 * T * T * RH + c8 * T * RH * RH + c9 * T * T * RH * RH;
       return (T >= 80 && RH >= 40) ? HI : T;
     }
 
     function scoreComfort(HI) {
-      if (HI < 65) return {score: 9, emoji: '😌 Cool'};
-      if (HI < 75) return {score: 8, emoji: '🙂 Pleasant'};
-      if (HI < 82) return {score: 6, emoji: '😐 Mild'};
-      if (HI < 90) return {score: 4, emoji: '🥵 Warm'};
-      return {score: 2, emoji: '🔥 Hot'};
-    }
-
-    function findTippingPoint(indoorHI, isDaytime) {
-      let humidity = 50, low = 30, high = 110, mid;
-      while (high - low > 0.5) {
-        mid = (low + high) / 2;
-        let hi = heatIndex(mid, humidity);
-        if (isDaytime) hi += 2;
-        (hi < indoorHI) ? low = mid : high = mid;
-      }
-      return Math.round(mid * 10) / 10;
+      if (HI < 65) return { score: 9, emoji: '😌 Cool' };
+      if (HI < 75) return { score: 8, emoji: '🙂 Pleasant' };
+      if (HI < 82) return { score: 6, emoji: '😐 Mild' };
+      if (HI < 90) return { score: 4, emoji: '🥵 Warm' };
+      return { score: 2, emoji: '🔥 Hot' };
     }
 
     function giveSmartTip(temp, isDay) {
@@ -109,61 +106,55 @@
       return "This might be the best time of day for fresh air.";
     }
 
-    // removed location block
-      if (!this.checked) return;
-      //
-        const weather = await fetchWeather(`${pos.coords.latitude},${pos.coords.longitude}`);
-          if (weather) {
-            document.getElementById("outdoorTemp").value = Math.round(weather.temp_f);
-            document.getElementById("outdoorHumidity").value = Math.round(weather.humidity);
-          }
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("lookupZip").addEventListener("click", async () => {
+        const zip = document.getElementById("zipCode").value;
+        if (!isValidZip(zip)) {
+          alert("Please enter a valid 5-digit ZIP code.");
+          return;
         }
-      // end
-
-    document.getElementById("lookupZip").addEventListener("click", async function () {
-      const zip = document.getElementById("zipCode").value;
-      if (isValidZip(zip)) {
         const weather = await fetchWeather(zip);
         if (weather) {
-          document.getElementById("outdoorTemp").value = Math.round(weather.temp_f);
-          document.getElementById("outdoorHumidity").value = Math.round(weather.humidity);
+          document.getElementById("outdoorTemp").value = weather.temp_f;
+          document.getElementById("outdoorHumidity").value = weather.humidity;
         }
-      } else {
-        alert("Please enter a valid 5-digit ZIP code.");
-      }
-    });
+      });
 
-    document.getElementById("comfortForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const inT = parseFloat(document.getElementById("indoorTemp").value);
-      const inH = parseFloat(document.getElementById("indoorHumidity").value);
-      const outT = parseFloat(document.getElementById("outdoorTemp").value);
-      const outH = parseFloat(document.getElementById("outdoorHumidity").value);
-      const isDay = document.getElementById("daytime").value === "day";
+      document.getElementById("comfortForm").addEventListener("submit", function (e) {
+        e.preventDefault();
 
-      const inHI = heatIndex(inT, inH);
-      let outHI = heatIndex(outT, outH);
-      if (isDay) outHI += 2;
+        const inT = parseFloat(document.getElementById("indoorTemp").value);
+        const inH = parseFloat(document.getElementById("indoorHumidity").value);
+        const outT = parseFloat(document.getElementById("outdoorTemp").value);
+        const outH = parseFloat(document.getElementById("outdoorHumidity").value);
+        const isDay = document.getElementById("daytime").value === "day";
 
-      const inScore = scoreComfort(inHI);
-      const outScore = scoreComfort(outHI);
-      document.getElementById("comfortScores").textContent =
-        `Indoor: ${inScore.emoji} (${inScore.score}/10) — Outdoor: ${outScore.emoji} (${outScore.score}/10)`;
+        const inHI = heatIndex(inT, inH);
+        let outHI = heatIndex(outT, outH);
+        if (isDay) outHI += 2;
 
-      const result = document.getElementById("result");
-      const diff = Math.round((outHI - inHI) * 10) / 10;
-      result.textContent = diff < -2 ? "Yes, open the windows—it'll feel better!" :
-                            diff > 2 ? "No, keep them closed—outside would be worse." :
-                            "Meh, doesn’t matter much. Conditions are similar.";
+        const diff = Math.round((outHI - inHI) * 10) / 10;
+        const inScore = scoreComfort(inHI);
+        const outScore = scoreComfort(outHI);
 
-      document.getElementById("explanation").textContent = "Based on heat index and humidity comfort levels.";
-      
-      document.getElementById("smartTip").textContent = giveSmartTip(outT, isDay);
-      document.getElementById("showExplain").onclick = () => {
-        document.getElementById("explainMore").style.display = "block";
-        document.getElementById("explainMore").textContent = 
+        document.getElementById("comfortScores").textContent =
+          `Indoor: ${inScore.emoji} (${inScore.score}/10) — Outdoor: ${outScore.emoji} (${outScore.score}/10)`;
+
+        const result = document.getElementById("result");
+        if (diff < -2) result.textContent = "Yes, open the windows—it'll feel better!";
+        else if (diff > 2) result.textContent = "No, keep them closed—outside would be worse.";
+        else result.textContent = "Meh, doesn’t matter much. Conditions are similar.";
+
+        document.getElementById("explanation").textContent = "Based on heat index and humidity comfort levels.";
+        document.getElementById("smartTip").textContent = giveSmartTip(outT, isDay);
+      });
+
+      document.getElementById("showExplain").addEventListener("click", () => {
+        const explain = document.getElementById("explainMore");
+        explain.style.display = "block";
+        explain.textContent =
           "We compare how hot and humid it feels inside versus outside using the heat index. If it feels much better outside, we suggest opening the windows. If they’re close, we say it won’t matter much.";
-      };
+      });
     });
   </script>
 </body>
