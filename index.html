@@ -5,53 +5,122 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Window Wise</title>
   <link rel="manifest" href="manifest.json" />
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js').catch(console.error);
-      });
-    }
-  </script>
   <style>
-    body { font-family: sans-serif; max-width: 500px; margin: auto; padding: 2rem; }
-    label { display: block; margin-top: 1rem; }
-    input, select { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
-    button { margin-top: 1.5rem; padding: 0.75rem; width: 100%; }
-    #result, #comfortScores { margin-top: 2rem; font-size: 1.2rem; font-weight: bold; }
-    #explanation, #smartTip, #explainMore { margin-top: 0.5rem; font-size: 1rem; color: #555; }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      max-width: 600px;
+      margin: auto;
+      padding: 2rem;
+      border-radius: 12px;
+    }
+    h1 {
+      text-align: center;
+      color: #4CAF50;
+      margin-bottom: 1.5rem;
+    }
+    fieldset {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      border-radius: 12px;
+      background-color: #ffffff;
+      margin-top: 1.5rem;
+    }
+    legend {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #f4f4f4;
+    }
+    button {
+      margin-top: 1.5rem;
+      padding: 0.75rem;
+      width: 100%;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #result, #comfortScores {
+      margin-top: 2rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+    }
+    #explanation, #smartTip, #explainMore {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: #555;
+      text-align: center;
+    }
+    #showExplain {
+      background-color: #e0f2f1;
+      color: #00796b;
+      margin-top: 1.5rem;
+    }
+    .emoji {
+      font-size: 1.5rem;
+    }
   </style>
 </head>
 <body>
   <h1>Window Wise</h1>
   <form id="comfortForm">
-    <label>
-      Zip Code:
-      <input type="text" id="zipCode" maxlength="5" required />
-      <button type="button" id="lookupZip">Fetch Weather</button>
-    </label>
-    <label>
-      Is it daytime or nighttime?
-      <select id="daytime" required>
-        <option value="day">Daytime</option>
-        <option value="night">Nighttime</option>
-      </select>
-    </label>
-    <label>
-      Indoor Temperature (°F):
-      <input type="number" id="indoorTemp" required />
-    </label>
-    <label>
-      Indoor Humidity (%):
-      <input type="number" id="indoorHumidity" required />
-    </label>
-    <label>
-      Outdoor Temperature (°F):
-      <input type="number" id="outdoorTemp" />
-    </label>
-    <label>
-      Outdoor Humidity (%):
-      <input type="number" id="outdoorHumidity" />
-    </label>
+    <fieldset>
+      <legend>Location</legend>
+      <label>
+        Zip Code:
+        <input type="text" id="zipCode" maxlength="5" required />
+      </label>
+      <button id="lookupZip" type="button">Fetch Weather</button>
+    </fieldset>
+    <fieldset>
+      <legend>Indoor Conditions</legend>
+      <label>
+        Temperature (°F):
+        <input type="number" id="indoorTemp" required />
+      </label>
+      <label>
+        Humidity (%):
+        <input type="number" id="indoorHumidity" required />
+      </label>
+    </fieldset>
+    <fieldset>
+      <legend>Outdoor Conditions</legend>
+      <label>
+        Temperature (°F):
+        <input type="number" id="outdoorTemp" />
+      </label>
+      <label>
+        Humidity (%):
+        <input type="number" id="outdoorHumidity" />
+      </label>
+    </fieldset>
+    <fieldset>
+      <legend>Other</legend>
+      <label>
+        Is it daytime or nighttime?
+        <select id="daytime" required>
+          <option value="day">Daytime</option>
+          <option value="night">Nighttime</option>
+        </select>
+      </label>
+    </fieldset>
     <button type="submit">Should I open the windows?</button>
   </form>
 
@@ -85,19 +154,19 @@
 
     function heatIndex(T, RH) {
       const c1 = -42.379, c2 = 2.04901523, c3 = 10.14333127, c4 = -0.22475541,
-        c5 = -0.00683783, c6 = -0.05481717, c7 = 0.00122874,
-        c8 = 0.00085282, c9 = -0.00000199;
-      const HI = c1 + c2 * T + c3 * RH + c4 * T * RH + c5 * T * T + c6 * RH * RH +
-        c7 * T * T * RH + c8 * T * RH * RH + c9 * T * T * RH * RH;
+            c5 = -0.00683783, c6 = -0.05481717, c7 = 0.00122874,
+            c8 = 0.00085282, c9 = -0.00000199;
+      const HI = c1 + c2*T + c3*RH + c4*T*RH + c5*T*T + c6*RH*RH +
+                 c7*T*T*RH + c8*T*RH*RH + c9*T*T*RH*RH;
       return (T >= 80 && RH >= 40) ? HI : T;
     }
 
     function scoreComfort(HI) {
-      if (HI < 65) return { score: 9, emoji: '😌 Cool' };
-      if (HI < 75) return { score: 8, emoji: '🙂 Pleasant' };
-      if (HI < 82) return { score: 6, emoji: '😐 Mild' };
-      if (HI < 90) return { score: 4, emoji: '🥵 Warm' };
-      return { score: 2, emoji: '🔥 Hot' };
+      if (HI < 65) return { score: 9, emoji: '😌' };
+      if (HI < 75) return { score: 8, emoji: '🙂' };
+      if (HI < 82) return { score: 6, emoji: '😐' };
+      if (HI < 90) return { score: 4, emoji: '🥵' };
+      return { score: 2, emoji: '🔥' };
     }
 
     function giveSmartTip(temp, isDay) {
@@ -138,7 +207,7 @@
         const outScore = scoreComfort(outHI);
 
         document.getElementById("comfortScores").textContent =
-          `Indoor: ${inScore.emoji} (${inScore.score}/10) — Outdoor: ${outScore.emoji} (${outScore.score}/10)`;
+          `Indoor: ${inScore.emoji} ${inScore.score}/10 — Outdoor: ${outScore.emoji} ${outScore.score}/10`;
 
         const result = document.getElementById("result");
         if (diff < -2) result.textContent = "Yes, open the windows—it'll feel better!";
